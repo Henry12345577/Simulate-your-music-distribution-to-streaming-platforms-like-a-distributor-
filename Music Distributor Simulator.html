@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Distribution App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            width: 100%;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: bold;
+            display: block;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="file"],
+        .form-group input[type="email"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-group button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+        .music-platforms {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .music-platforms input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .platform-icons img {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Music Distribution App</h1>
+</header>
+
+<div class="container">
+    <div id="login-form" class="form-group">
+        <h2>Login</h2>
+        <label for="email">Email</label>
+        <input type="email" id="login-email" placeholder="Enter your email" required>
+        <label for="password">Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password" required>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="signup-form" class="form-group">
+        <h2>Sign Up</h2>
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" placeholder="Enter your email" required>
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" placeholder="Enter your password" required>
+        <button onclick="signUp()">Sign Up</button>
+    </div>
+
+    <div id="music-upload-form" class="form-group" style="display:none;">
+        <h2>Upload Your Music</h2>
+        <label for="artist-name">Artist Name</label>
+        <input type="text" id="artist-name" placeholder="Enter artist name" required>
+
+        <label for="album-name">Album Name</label>
+        <input type="text" id="album-name" placeholder="Enter album name" required>
+
+        <label for="song-name">Song Name</label>
+        <input type="text" id="song-name" placeholder="Enter song name" required>
+        
+        <label for="song-file">Upload Audio</label>
+        <input type="file" id="song-file" accept="audio/*" required>
+
+        <label for="cover-art">Upload Cover Art</label>
+        <input type="file" id="cover-art" accept="image/*" required>
+
+        <label for="platforms">Select Platforms</label>
+        <div class="music-platforms">
+            <div class="platform-icons">
+                <input type="checkbox" id="spotify" /> <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Spotify_icon.svg" alt="Spotify">
+                <input type="checkbox" id="youtube" /> <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/YouTube_Music_logo.svg" alt="YouTube Music">
+                <input type="checkbox" id="tidal" /> <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Tidal_logo.svg" alt="Tidal">
+                <input type="checkbox" id="audiomack" /> <img src="https://upload.wikimedia.org/wikipedia/commons/5/57/Audiomack_logo.svg" alt="Audiomack">
+            </div>
+        </div>
+
+        <button onclick="uploadMusic()">Upload Music</button>
+    </div>
+</div>
+
+<script>
+    // Initialize IndexedDB for storing music metadata
+    let db;
+    const request = indexedDB.open("MusicDB", 1);
+
+    request.onerror = (event) => {
+        console.log("Database error: " + event.target.errorCode);
+    };
+
+    request.onsuccess = (event) => {
+        db = event.target.result;
+    };
+
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        const objectStore = db.createObjectStore("songs", { keyPath: "id", autoIncrement: true });
+        objectStore.createIndex("songName", "songName", { unique: false });
+        objectStore.createIndex("artistName", "artistName", { unique: false });
+        objectStore.createIndex("albumName", "albumName", { unique: false });
+        objectStore.createIndex("platforms", "platforms", { unique: false });
+    };
+
+    // Simulate login and sign-up
+    function signUp() {
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+        localStorage.setItem("user", JSON.stringify({ email, password }));
+        alert("Sign-up successful!");
+        document.getElementById("signup-form").style.display = "none";
+        document.getElementById("music-upload-form").style.display = "block";
+    }
+
+    function login() {
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+        const user = JSON.parse(localStorage.getItem("user"));
+        
+        if (user && user.email === email && user.password === password) {
+            alert("Login successful!");
+            document.getElementById("login-form").style.display = "none";
+            document.getElementById("music-upload-form").style.display = "block";
+        } else {
+            alert("Invalid login credentials.");
+        }
+    }
+
+    // Simulate uploading music to streaming platforms and storing metadata
+    function uploadMusic() {
+        const artistName = document.getElementById("artist-name").value;
+        const albumName = document.getElementById("album-name").value;
+        const songName = document.getElementById("song-name").value;
+        const songFile = document.getElementById("song-file").files[0];
+        const coverArt = document.getElementById("cover-art").files[0];
+        const platforms = [];
+        if (document.getElementById("spotify").checked) platforms.push("Spotify");
+        if (document.getElementById("youtube").checked) platforms.push("YouTube Music");
+        if (document.getElementById("tidal").checked) platforms.push("Tidal");
+        if (document.getElementById("audiomack").checked) platforms.push("Audiomack");
+
+        const transaction = db.transaction(["songs"], "readwrite");
+        const objectStore = transaction.objectStore("songs");
+        const songMetadata = {
+            artistName: artistName,
+            albumName: albumName,
+            songName: songName,
+            file: songFile.name,
+            coverArt: coverArt.name,
+            platforms: platforms,
+        };
+        objectStore.add(songMetadata);
+
+        transaction.oncomplete = () => {
+            alert("Music uploaded successfully!");
+            document.getElementById("music-upload-form").reset();
+        };
+
+        transaction.onerror = (event) => {
+            console.log("Error storing song metadata:", event.target.error);
+        };
+    }
+</script>
+
+</body>
+</html>
